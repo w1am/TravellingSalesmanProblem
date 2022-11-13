@@ -38,7 +38,7 @@ public class GeneticAlgorithm {
         String line = reader.readLine();
 
         while (line != null) {
-            String[] tokens = line.split(" ");
+            String[] tokens = line.replaceAll("\\s+"," ").trim().split(" ");
             int xCoordinate = Integer.parseInt(tokens[1]);
             int yCoordinate = Integer.parseInt(tokens[2]);
             City city = new City(xCoordinate, yCoordinate);

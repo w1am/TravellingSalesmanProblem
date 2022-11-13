@@ -18,7 +18,7 @@ public class Logger {
     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     LocalDateTime now = LocalDateTime.now();
 
-    public Logger(String relativePathToFolder, float version, String description) throws IOException {
+    public Logger(String relativePathToFolder, String fileName, float version, String description) throws IOException {
         this.outputFilePath = System.getProperty("user.dir") + relativePathToFolder + String.format("output-%.1f.log", version);
 
         RandomAccessFile f = new RandomAccessFile(new File(this.outputFilePath), "rw");
@@ -29,7 +29,7 @@ public class Logger {
             description
         ).getBytes(StandardCharsets.UTF_8));
         f.seek(f.length());
-        f.write(String.format("\n\n===============[ %s ]=================\n", this.dtf.format(this.now)).getBytes(StandardCharsets.UTF_8));
+        f.write(String.format("\n\n===============[ %s - %s ]=================\n", this.dtf.format(this.now), fileName).getBytes(StandardCharsets.UTF_8));
         f.close();
     }
 

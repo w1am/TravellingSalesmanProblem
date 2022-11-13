@@ -17,9 +17,11 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
-        Logger logger = new Logger("/logging/", 1.0f, "Genetic Algorithm using simple distance calculation");
+        String fileName = readPath();
 
-        String pathToFile = System.getProperty("user.dir") + "/resources/" + readPath();
+        Logger logger = new Logger("/logging/", fileName, 1.0f, "Genetic Algorithm using simple distance calculation");
+
+        String pathToFile = System.getProperty("user.dir") + "/resources/" + fileName;
 
         Timer timer = new Timer();
 
@@ -44,7 +46,7 @@ public class Main {
 
         logger.log("Generation count", geneticAlgorithm.generationCount);
         logger.log("Best fitness", geneticAlgorithm.getBestIndividual().calculateFitness(geneticAlgorithm.cities));
-        logger.log("Generations", geneticAlgorithm.fitnessOverTime);
+        logger.logWithoutMessage("Fitness over time", geneticAlgorithm.fitnessOverTime);
 
         timer.renderTime();
 
