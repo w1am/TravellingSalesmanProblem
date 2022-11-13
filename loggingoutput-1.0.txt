@@ -1,0 +1,4 @@
+Version: 1.00
+Description: Genetic Algorithm 
+
+[2022/11/13 16:07:37] Time: 384.9745[2022/11/13 16:07:52] Time: 366.22
