@@ -17,9 +17,10 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
-        String fileName = readPath();
+//        String fileName = readPath();
+        String fileName = "file2.txt";
 
-        Logger logger = new Logger("/logging/", fileName, 1.0f, "Genetic Algorithm using simple distance calculation");
+        Logger logger = new Logger("/logging/", fileName, 1.1f, "Genetic Algorithm using simple distance calculation but with different configuration");
 
         String pathToFile = System.getProperty("user.dir") + "/resources/" + fileName;
 
@@ -31,21 +32,20 @@ public class Main {
 
         geneticAlgorithm.spawnIndividuals(pathToFile);
 
-        geneticAlgorithm.doGeneration();
+        geneticAlgorithm.populateSpeedLimits();
 
         do {
-            if (geneticAlgorithm.generationCount < Configuration.MAX_GENERATIONS && !geneticAlgorithm.hasConverged) {
+            if (!geneticAlgorithm.hasConverged) {
                 geneticAlgorithm.doGeneration();
+
+                System.out.println("Best fitness: " + geneticAlgorithm.getBestIndividual().getDistanceFitness());
             }
-        } while (
-            geneticAlgorithm.generationCount < Configuration.MAX_GENERATIONS &&
-            geneticAlgorithm.noImprovementCount != Configuration.MAX_NO_IMPROVEMENT_COUNT
-        );
+        } while (geneticAlgorithm.generationCount != Configuration.MAX_GENERATIONS && geneticAlgorithm.noImprovementCount != Configuration.MAX_NO_IMPROVEMENT_COUNT);
 
         timer.stop();
 
         logger.log("Generation count", geneticAlgorithm.generationCount);
-        logger.log("Best fitness", geneticAlgorithm.getBestIndividual().calculateFitness(geneticAlgorithm.cities));
+        logger.log("Best fitness", geneticAlgorithm.getBestIndividual().getDistanceFitness());
         logger.logWithoutMessage("Fitness over time", geneticAlgorithm.fitnessOverTime);
 
         timer.renderTime();

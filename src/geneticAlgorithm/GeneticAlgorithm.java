@@ -1,32 +1,47 @@
 package geneticAlgorithm;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class GeneticAlgorithm {
     private final Random random;
-    private final List<Double> cumulativeProportions;
-    private double previousFitness;
     public List<Individual> population;
     public List<Double> fitnessOverTime;
     public int generationCount = 0;
     public int noImprovementCount = 0;
-    private int citiesCount = 0;
+    private int cityCount = 0;
     public final List<City> cities;
+    public HashMap<Pair<Integer, Integer>, Float> pathSpeedLimits;
 
     public Boolean hasConverged = generationCount > Configuration.MAX_GENERATIONS ||
             noImprovementCount > Configuration.MAX_NO_IMPROVEMENT_COUNT;
 
     public GeneticAlgorithm() {
-        this.previousFitness = Double.MAX_VALUE;
-        this.cumulativeProportions = new ArrayList<>();
         this.fitnessOverTime = new ArrayList<>();
         this.population = new ArrayList<>();
         this.cities = new ArrayList<>();
         this.random = new Random();
+        this.pathSpeedLimits = new HashMap<>();
+    }
+
+    /**
+     * Populate speed limits for each routes
+     */
+    public void populateSpeedLimits() {
+        int localRandom = random.nextInt(17) + 1;
+
+        for (int fromTown = 0; fromTown < this.cityCount; fromTown++) {
+            for (int toTown = 0; toTown < this.cityCount; toTown++) {
+                // If our from town is our to town, no need to calculate a path
+                if (fromTown == toTown) continue;
+
+                // Calculate the path distance as speed is distance dependent
+                double pathDistance = this.cities.get(fromTown).distanceTo(this.cities.get(toTown));
+
+                // Add the speed for this directional path
+                this.pathSpeedLimits.put(new Pair<>(fromTown, toTown), (float) (pathDistance / localRandom));
+            }
+        }
     }
 
     /**
@@ -43,7 +58,7 @@ public class GeneticAlgorithm {
             int yCoordinate = Integer.parseInt(tokens[2]);
             City city = new City(xCoordinate, yCoordinate);
             this.cities.add(city);
-            this.citiesCount++;
+            this.cityCount++;
             line = reader.readLine();
         }
 
@@ -61,20 +76,18 @@ public class GeneticAlgorithm {
         List<Integer> sequence = new ArrayList<>();
 
         /* Add the cities to the sequence */
-        for (int cityNumber = 0; cityNumber < this.citiesCount; cityNumber++) {
+        for (int cityNumber = 0; cityNumber < this.cityCount; cityNumber++) {
             sequence.add(cityNumber);
         }
 
         /* Shuffle the sequence */
         Collections.shuffle(sequence);
 
-        return new Individual(sequence);
+        return new Individual(sequence, this.cities, this.pathSpeedLimits);
     }
 
     public void doGeneration() {
         this.generationCount++;
-
-        updateCumulativeProportions();
 
         List<Individual> offspring = new ArrayList<>();
 
@@ -100,35 +113,37 @@ public class GeneticAlgorithm {
         // Add all the offspring to our existing population
         this.population.addAll(offspring);
 
-        // Order the population individual by their fitness values
-        population.sort((a, b) -> {
-            try {
-                return Double.compare(a.calculateFitness(this.cities), b.calculateFitness(this.cities));
-            } catch (Exception e) {
-                e.printStackTrace();
+        MultiObjective.updatePopulationFitness(this.population);
+
+        // Take the best 'PopulationCount' worth of individuals
+        List<Individual> newPopulation = new ArrayList<>();
+
+        // Order by rank then order by crowding distance in descending order
+        this.population.sort((Individual a, Individual b) -> {
+            if (a.getRank() == b.getRank()) {
+                return (int) (b.getCrowdingDistance() - a.getCrowdingDistance());
+            } else {
+                return a.getRank() - b.getRank();
             }
-            return 0;
         });
 
-        Individual bestIndividual = population.get(0);
+        List<Individual> finalNewPopulation = newPopulation;
+        this.population.forEach((Individual individual) -> {
+            if (!finalNewPopulation.contains(individual)) {
+                finalNewPopulation.add(individual);
+            }
+        });
 
-        bestIndividual.getSequence().add(bestIndividual.getSequence().get(0));
+        newPopulation = newPopulation.subList(0, Configuration.POPULATION_COUNT);
 
-        double bestFitness = bestIndividual.calculateFitness(this.cities);
+        this.population.clear();
 
-        if (previousFitness == bestFitness) {
-            noImprovementCount++;
-        } else {
-            previousFitness = bestFitness;
-            noImprovementCount = 0;
-        }
-
-        fitnessOverTime.add(bestFitness);
+        this.population.addAll(newPopulation);
     }
 
     private Pair<Individual, Individual> doMutate(Individual offspringA, Individual offspringB) {
-        Individual newOffspringA = new Individual(offspringA.getSequence());
-        Individual newOffspringB = new Individual(offspringB.getSequence());
+        Individual newOffspringA = new Individual(offspringA.getSequence(), this.cities, this.pathSpeedLimits);
+        Individual newOffspringB = new Individual(offspringB.getSequence(), this.cities, this.pathSpeedLimits);
 
         if (random.nextDouble() < Configuration.MUTATION_CHANCE) {
             newOffspringA = mutate(offspringA);
@@ -161,7 +176,7 @@ public class GeneticAlgorithm {
         sequence.set(uniqueTowns.first(), sequence.get(uniqueTowns.second()));
         sequence.set(uniqueTowns.second(), temp);
 
-        return new Individual(sequence);
+        return new Individual(sequence, this.cities, this.pathSpeedLimits);
     }
 
     private Individual rotateMutate(Individual individual) {
@@ -180,16 +195,16 @@ public class GeneticAlgorithm {
         newSequence.addAll(middle);
         newSequence.addAll(tail);
 
-        return new Individual(newSequence);
+        return new Individual(newSequence, this.cities, this.pathSpeedLimits);
     }
 
     private Pair<Integer, Integer> getUniqueTowns() {
         // Generate two unique towns
-        int townA = random.nextInt(this.citiesCount);
-        int townB = random.nextInt(this.citiesCount);
+        int townA = random.nextInt(this.cityCount);
+        int townB = random.nextInt(this.cityCount);
 
         while (townB == townA) {
-            townB = random.nextInt(this.citiesCount);
+            townB = random.nextInt(this.cityCount);
         }
 
         return new Pair<>(townA, townB);
@@ -204,7 +219,7 @@ public class GeneticAlgorithm {
 
     private Individual doCrossover(Individual individualA, Individual individualB) {
         // Generate an integer between 1 and town size - 1
-        int crossoverPosition = random.nextInt(this.citiesCount - 1) + 1;
+        int crossoverPosition = random.nextInt(this.cityCount - 1) + 1;
 
         List<Integer> offspringSequence = new ArrayList<>(individualA.getSequence().subList(0, crossoverPosition));
 
@@ -215,90 +230,38 @@ public class GeneticAlgorithm {
             }
         }
 
-        return new Individual(offspringSequence);
+        return new Individual(offspringSequence, this.cities, this.pathSpeedLimits);
     }
 
     private Individual getParent() {
-        Individual selectedIndividual;
-
-        if (random.nextDouble() > 0.5) {
-            // Tournament
-            selectedIndividual = tournamentSelection();
-        } else {
-            // Biased random
-            selectedIndividual = biasedRandomSelection();
-        }
-
-        selectedIndividual.getSequence().add(selectedIndividual.getSequence().get(0));
-
-        return selectedIndividual;
+        Pair<Individual, Individual> candidates = this.getCandidateParents();
+        return this.tournamentSelection(candidates.first(), candidates.second());
     }
 
-    private Individual tournamentSelection() {
-        Individual candidate1 = population.get(random.nextInt(Configuration.POPULATION_COUNT));
-        Individual candidate2 = population.get(random.nextInt(Configuration.POPULATION_COUNT));
+    public Pair<Individual, Individual> getCandidateParents() {
+        Individual candidateA = this.population.get(random.nextInt(this.population.size()));
+        Individual candidateB = this.population.get(random.nextInt(this.population.size()));
 
-        while (candidate1 == candidate2) {
-            candidate2 = population.get(random.nextInt(Configuration.POPULATION_COUNT));
+        while (candidateA == candidateB) {
+            candidateB = this.population.get(random.nextInt(this.population.size()));
         }
 
-        if (candidate1.calculateFitness(this.cities) > candidate2.calculateFitness(this.cities)) {
-            return candidate1;
-        } else {
-            return candidate2;
-        }
+        return new Pair<>(candidateA, candidateB);
     }
 
-    private Individual biasedRandomSelection() {
-        double selectedValue = random.nextDouble();
-
-        for (int i = 0; i < cumulativeProportions.size(); i++) {
-            double value = cumulativeProportions.get(i);
-
-            if (value >= selectedValue) {
-                return population.get(i);
-            }
+    private Individual tournamentSelection(Individual candidateA, Individual candidateB) {
+        if (candidateA.getRank() < candidateB.getRank()) {
+            return candidateA;
+        } else if (candidateA.getRank() == candidateB.getRank()) {
+            return candidateA.getCrowdingDistance() > candidateB.getCrowdingDistance() ? candidateA : candidateB;
+        } else {
+            return candidateB;
         }
-
-        return population.get(Configuration.POPULATION_COUNT - 1);
     }
 
     public Individual getBestIndividual() {
-        // Go back to starting town
-        return getParent();
-    }
-
-    public void updateCumulativeProportions() {
-        // Sum of all current individual fitness
-        double sum = 0.0;
-
-        for (Individual i : population) {
-            sum = i.calculateFitness(this.cities);
-        }
-
-        List<Double> proportions = new ArrayList<>();
-
-        for (Individual i : population) {
-            proportions.add(sum / i.calculateFitness(this.cities));
-        }
-
-        double proportionSum = 0.0;
-
-        for (Double i : proportions) {
-            proportionSum += i;
-        }
-
-        List<Double> normalizedProportions = new ArrayList<>();
-
-        for (Double i : proportions) {
-            normalizedProportions.add(i / proportionSum);
-        }
-
-        double cumulativeTotal = 0.0;
-
-        for (Double i : normalizedProportions) {
-            cumulativeTotal += i;
-            cumulativeProportions.add(cumulativeTotal);
-        }
+        // We no longer have a 'best' individual, so we are going to show a random one from the first front.
+        List<Individual> firstRank = this.population.stream().filter(individual -> individual.getRank() == 1).toList();
+        return firstRank.get(random.nextInt(firstRank.size()));
     }
 }
