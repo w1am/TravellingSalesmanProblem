@@ -20,7 +20,12 @@ public class Main {
 //        String fileName = readPath();
         String fileName = "file2.txt";
 
-        Logger logger = new Logger("/logging/", fileName, 1.1f, "Genetic Algorithm using simple distance calculation but with different configuration");
+        Logger logger = new Logger(
+                "/logging/",
+                fileName,
+                1.1f,
+                "Genetic Algorithm using simple distance calculation but with different configuration"
+        );
 
         String pathToFile = System.getProperty("user.dir") + "/resources/" + fileName;
 
@@ -40,7 +45,8 @@ public class Main {
 
                 System.out.println("Best fitness: " + geneticAlgorithm.getBestIndividual().getDistanceFitness());
             }
-        } while (geneticAlgorithm.generationCount != Configuration.MAX_GENERATIONS && geneticAlgorithm.noImprovementCount != Configuration.MAX_NO_IMPROVEMENT_COUNT);
+        } while (geneticAlgorithm.generationCount != Configuration.MAX_GENERATIONS &&
+                geneticAlgorithm.noImprovementCount != Configuration.MAX_NO_IMPROVEMENT_COUNT);
 
         timer.stop();
 

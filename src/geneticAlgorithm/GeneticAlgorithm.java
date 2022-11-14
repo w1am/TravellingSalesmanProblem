@@ -16,6 +16,8 @@ public class GeneticAlgorithm {
     public Boolean hasConverged = generationCount > Configuration.MAX_GENERATIONS ||
             noImprovementCount > Configuration.MAX_NO_IMPROVEMENT_COUNT;
 
+    private float previousConvergenceArea = Float.MAX_VALUE;
+
     public GeneticAlgorithm() {
         this.fitnessOverTime = new ArrayList<>();
         this.population = new ArrayList<>();
@@ -36,7 +38,9 @@ public class GeneticAlgorithm {
                 if (fromTown == toTown) continue;
 
                 // Calculate the path distance as speed is distance dependent
-                double pathDistance = this.cities.get(fromTown).distanceTo(this.cities.get(toTown));
+                double pathDistance = this.cities
+                    .get(fromTown)
+                    .distanceTo(this.cities.get(toTown));
 
                 // Add the speed for this directional path
                 this.pathSpeedLimits.put(new Pair<>(fromTown, toTown), (float) (pathDistance / localRandom));
@@ -139,11 +143,35 @@ public class GeneticAlgorithm {
         this.population.clear();
 
         this.population.addAll(newPopulation);
+
+        // Find the individual in the population with rank = 1 and order by the time fitness
+        List<Individual> firstRank = this.population.stream()
+                .filter(individual -> individual.getRank() == 1)
+                .sorted(Comparator.comparingDouble(Individual::getTimeFitness)).toList();
+
+        float currentArea = MultiObjective.calculateArea(firstRank);
+
+        if (Math.abs(this.previousConvergenceArea - currentArea) < 0.1) {
+            // No change
+            this.noImprovementCount++;
+        } else {
+            // Changed
+            this.noImprovementCount = 0;
+            this.previousConvergenceArea = currentArea;
+        }
     }
 
     private Pair<Individual, Individual> doMutate(Individual offspringA, Individual offspringB) {
-        Individual newOffspringA = new Individual(offspringA.getSequence(), this.cities, this.pathSpeedLimits);
-        Individual newOffspringB = new Individual(offspringB.getSequence(), this.cities, this.pathSpeedLimits);
+        Individual newOffspringA = new Individual(
+                offspringA.getSequence(),
+                this.cities,
+                this.pathSpeedLimits
+        );
+        Individual newOffspringB = new Individual(
+                offspringB.getSequence(),
+                this.cities,
+                this.pathSpeedLimits
+        );
 
         if (random.nextDouble() < Configuration.MUTATION_CHANCE) {
             newOffspringA = mutate(offspringA);
@@ -189,7 +217,10 @@ public class GeneticAlgorithm {
         Integer secondIndex = townA < townB ? townB : townA;
 
         List<Integer> newSequence = individual.getSequence().subList(0, firstIndex);
-        List<Integer> middle = individual.getSequence().stream().skip(firstIndex).limit(secondIndex - firstIndex).toList();
+        List<Integer> middle = individual
+                .getSequence().stream().skip(firstIndex)
+                .limit(secondIndex - firstIndex)
+                .toList();
         List<Integer> tail = individual.getSequence().stream().skip(secondIndex).toList();
 
         newSequence.addAll(middle);
@@ -221,7 +252,9 @@ public class GeneticAlgorithm {
         // Generate an integer between 1 and town size - 1
         int crossoverPosition = random.nextInt(this.cityCount - 1) + 1;
 
-        List<Integer> offspringSequence = new ArrayList<>(individualA.getSequence().subList(0, crossoverPosition));
+        List<Integer> offspringSequence = new ArrayList<>(
+                individualA.getSequence().subList(0, crossoverPosition)
+        );
 
         // Add all the elements from individualB that are not in offspringSequence
         for (int i = 0; i < individualB.getSequence().size(); i++) {
@@ -253,7 +286,9 @@ public class GeneticAlgorithm {
         if (candidateA.getRank() < candidateB.getRank()) {
             return candidateA;
         } else if (candidateA.getRank() == candidateB.getRank()) {
-            return candidateA.getCrowdingDistance() > candidateB.getCrowdingDistance() ? candidateA : candidateB;
+            return candidateA.getCrowdingDistance() > candidateB.getCrowdingDistance()
+                    ? candidateA
+                    : candidateB;
         } else {
             return candidateB;
         }
@@ -261,7 +296,11 @@ public class GeneticAlgorithm {
 
     public Individual getBestIndividual() {
         // We no longer have a 'best' individual, so we are going to show a random one from the first front.
-        List<Individual> firstRank = this.population.stream().filter(individual -> individual.getRank() == 1).toList();
+        List<Individual> firstRank = this.population
+                .stream()
+                .filter(individual -> individual.getRank() == 1)
+                .toList();
+
         return firstRank.get(random.nextInt(firstRank.size()));
     }
 }
