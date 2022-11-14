@@ -5,16 +5,20 @@ import java.util.List;
 
 public class Individual {
     private final List<Integer> sequence;
-    private int rank;
-    private double crowdingDistance;
-    private float distanceFitness;
-    private float timeFitness;
-    private float normalizedDistanceFitness;
-    private float normalizedTimeFitness;
     private final List<City> cities;
     private final HashMap<Pair<Integer, Integer>, Float> pathSpeedLimits;
+    private int rank;
+    private double crowdingDistance;
+    private final float distanceFitness;
+    private final float timeFitness;
+    private float normalizedDistanceFitness;
+    private float normalizedTimeFitness;
 
-    public Individual(List<Integer> sequence, List<City> cities, HashMap<Pair<Integer, Integer>, Float> pathSpeedLimits) {
+    public Individual(
+            List<Integer> sequence,
+            List<City> cities,
+            HashMap<Pair<Integer, Integer>, Float> pathSpeedLimits
+    ) {
         this.sequence = sequence;
         this.cities = cities;
         this.pathSpeedLimits = pathSpeedLimits;
@@ -32,12 +36,14 @@ public class Individual {
             float x = toTown.getXCoordinate() - fromTown.getXCoordinate();
             float y = toTown.getYCoordinate() - fromTown.getYCoordinate();
 
-            double d = (float)Math.sqrt(x * x + y * y);
+            double d = (float) Math.sqrt(x * x + y * y);
 
             totalDistance += d;
         }
 
-        totalDistance += this.cities.get(this.sequence.get(this.sequence.size() - 1)).distanceTo(this.cities.get(this.sequence.get(0)));
+        totalDistance += this.cities
+                .get(this.sequence.get(this.sequence.size() - 1))
+                .distanceTo(this.cities.get(this.sequence.get(0)));
 
         return totalDistance;
     }
@@ -52,11 +58,11 @@ public class Individual {
             float x = toTown.getXCoordinate() - fromTown.getXCoordinate();
             float y = toTown.getYCoordinate() - fromTown.getYCoordinate();
 
-            double d = (float)Math.sqrt(x * x + y * y);
+            double d = (float) Math.sqrt(x * x + y * y);
 
-            Float speedLimit = this.pathSpeedLimits.get(new Pair<>(i, i-1));
+            Float speedLimit = this.pathSpeedLimits.get(new Pair<>(i, i - 1));
 
-            if (this.pathSpeedLimits.containsKey(new Pair<>(i, i-1))) {
+            if (this.pathSpeedLimits.containsKey(new Pair<>(i, i - 1))) {
                 totalTime += d / speedLimit;
             }
         }
@@ -96,16 +102,8 @@ public class Individual {
         return distanceFitness;
     }
 
-    public void setDistanceFitness(float distanceFitness) {
-        this.distanceFitness = distanceFitness;
-    }
-
     public float getTimeFitness() {
         return timeFitness;
-    }
-
-    public void setTimeFitness(float timeFitness) {
-        this.timeFitness = timeFitness;
     }
 
     public float getNormalizedDistanceFitness() {
@@ -122,9 +120,5 @@ public class Individual {
 
     public void setNormalizedTimeFitness(float normalizedTimeFitness) {
         this.normalizedTimeFitness = normalizedTimeFitness;
-    }
-
-    public List<City> getCities() {
-        return cities;
     }
 }
