@@ -18,7 +18,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 //        String fileName = readPath();
-        String fileName = "file2.txt";
+        String fileName = "file1.txt";
 
         Logger logger = new Logger(
                 "/logging/",
@@ -42,8 +42,6 @@ public class Main {
         do {
             if (!geneticAlgorithm.hasConverged) {
                 geneticAlgorithm.doGeneration();
-
-                System.out.println("Best fitness: " + geneticAlgorithm.getBestIndividual().getDistanceFitness());
             }
         } while (geneticAlgorithm.generationCount != Configuration.MAX_GENERATIONS &&
                 geneticAlgorithm.noImprovementCount != Configuration.MAX_NO_IMPROVEMENT_COUNT);
@@ -51,12 +49,16 @@ public class Main {
         timer.stop();
 
         logger.log("Generation count", geneticAlgorithm.generationCount);
-        logger.log("Best fitness", geneticAlgorithm.getBestIndividual().getDistanceFitness());
-        logger.logWithoutMessage("Fitness over time", geneticAlgorithm.fitnessOverTime);
+        logger.log("Length of path: ",
+                geneticAlgorithm.getBestIndividual().getDistanceFitness());
+        logger.log("Optimal path", geneticAlgorithm.getBestIndividual().printSequence());
 
         timer.renderTime();
 
-        logger.logWithoutMessage("Time elapsed", timer.getDurationInSeconds());
+        logger.logWithoutMessage("Time elapsed (nanoseconds)",
+                timer.getDurationInNanos());
+        logger.logWithoutMessage("Time elapsed (milliseconds)",
+                timer.getDurationInMilliseconds());
+        logger.logWithoutMessage("Time elapsed (seconds)", timer.getDurationInSeconds());
     }
-
 }

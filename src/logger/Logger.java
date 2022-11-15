@@ -33,7 +33,7 @@ public class Logger {
         f.close();
     }
 
-    public void log(String message, Object value) throws IOException {
+    public  void log(String message, Object value) throws IOException {
         String logMessage = "[" + this.dtf.format(this.now) + "] " + message + ": " + value + "\n";
 
         Files.writeString(Paths.get(this.outputFilePath), logMessage, StandardOpenOption.APPEND);

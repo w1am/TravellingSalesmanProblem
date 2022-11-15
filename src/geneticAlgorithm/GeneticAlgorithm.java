@@ -108,7 +108,8 @@ public class GeneticAlgorithm {
             Pair<Individual, Individual> offsprings = getOffSpring(mother, father);
 
             // Mutate
-            Pair<Individual, Individual> mutatedOffsprings = doMutate(offsprings.first(), offsprings.second());
+            Pair<Individual, Individual> mutatedOffsprings =
+                    doMutate(offsprings.first(), offsprings.second());
 
             offspring.add(mutatedOffsprings.first());
             offspring.add(mutatedOffsprings.second());
@@ -122,23 +123,24 @@ public class GeneticAlgorithm {
         // Take the best 'PopulationCount' worth of individuals
         List<Individual> newPopulation = new ArrayList<>();
 
-        // Order by rank then order by crowding distance in descending order
-        this.population.sort((Individual a, Individual b) -> {
+        // Order by rank ascending then by crowding distance descending
+        this.population.sort((a, b) -> {
             if (a.getRank() == b.getRank()) {
-                return (int) (b.getCrowdingDistance() - a.getCrowdingDistance());
-            } else {
-                return a.getRank() - b.getRank();
+                return Double.compare(b.getCrowdingDistance(),
+                        a.getCrowdingDistance());
             }
+
+            return Integer.compare(a.getRank(), b.getRank());
         });
 
-        List<Individual> finalNewPopulation = newPopulation;
-        this.population.forEach((Individual individual) -> {
-            if (!finalNewPopulation.contains(individual)) {
-                finalNewPopulation.add(individual);
+        for (Individual individual : this.population) {
+            if (!newPopulation.contains(individual)) {
+                newPopulation.add(individual);
             }
-        });
+        }
 
-        newPopulation = newPopulation.subList(0, Configuration.POPULATION_COUNT);
+        newPopulation = newPopulation.subList(0,
+                Math.min(Configuration.POPULATION_COUNT, newPopulation.size()));
 
         this.population.clear();
 

@@ -1,5 +1,7 @@
 package geneticAlgorithm;
 
+import java.awt.image.AreaAveragingScaleFilter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -120,5 +122,17 @@ public class Individual {
 
     public void setNormalizedTimeFitness(float normalizedTimeFitness) {
         this.normalizedTimeFitness = normalizedTimeFitness;
+    }
+
+    public List<Integer> printSequence() {
+        List<Integer> cities = new ArrayList<>();
+
+        for (Integer city : this.sequence) {
+            cities.add(city + 1);
+        }
+
+        cities.add(cities.get(0));
+
+        return cities;
     }
 }
