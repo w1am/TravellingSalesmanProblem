@@ -24,4 +24,11 @@ public class City {
     public void setYCoordinate(int yCoordinate) {
         this.yCoordinate = yCoordinate;
     }
+
+    public double distanceTo(City city) {
+        int xDistance = Math.abs(getXCoordinate() - city.getXCoordinate());
+        int yDistance = Math.abs(getYCoordinate() - city.getYCoordinate());
+
+        return Math.sqrt((xDistance * xDistance) + (yDistance * yDistance));
+    }
 }

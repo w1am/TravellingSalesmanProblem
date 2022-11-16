@@ -46,4 +46,10 @@ public class Logger {
 
         Files.writeString(Paths.get(this.outputFilePath), logMessage, StandardOpenOption.APPEND);
     }
+
+    public void logTabular(Object generationCount, Object lengthOfPath, Object optimalPath, Object timeElapsed) throws IOException {
+        String logMessage = generationCount + " & "  + lengthOfPath + " & " + optimalPath + " & " + "\\num[group" +
+                "-separator={,}]{" + timeElapsed + "}\n";
+        Files.writeString(Paths.get(this.outputFilePath), logMessage, StandardOpenOption.APPEND);
+    }
 }

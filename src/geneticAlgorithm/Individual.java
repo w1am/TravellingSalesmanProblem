@@ -1,8 +1,15 @@
 package geneticAlgorithm;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public record Individual(List<Integer> sequence) {
+public class Individual {
+    private final List<Integer> sequence;
+
+    public Individual(List<Integer> sequence) {
+        this.sequence = sequence;
+    }
+
     public List<Integer> getSequence() {
         return sequence;
     }
@@ -22,6 +29,22 @@ public record Individual(List<Integer> sequence) {
             totalDistance += d;
         }
 
+        totalDistance += cities
+                .get(this.sequence.get(this.sequence.size() - 1))
+                .distanceTo(cities.get(this.sequence.get(0)));
+
         return totalDistance;
+    }
+
+    public List<Integer> printSequence() {
+        List<Integer> cities = new ArrayList<>();
+
+        for (Integer city : this.sequence) {
+            cities.add(city + 1);
+        }
+
+        cities.add(cities.get(0));
+
+        return cities;
     }
 }

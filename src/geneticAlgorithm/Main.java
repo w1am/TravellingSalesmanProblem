@@ -17,7 +17,8 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
-        String fileName = readPath();
+//        String fileName = readPath();
+        String fileName = "file3.txt";
 
         Logger logger = new Logger("/logging/", fileName, 1.0f, "Genetic Algorithm using simple distance calculation");
 
@@ -45,12 +46,20 @@ public class Main {
         timer.stop();
 
         logger.log("Generation count", geneticAlgorithm.generationCount);
-        logger.log("Best fitness", geneticAlgorithm.getBestIndividual().calculateFitness(geneticAlgorithm.cities));
-        logger.logWithoutMessage("Fitness over time", geneticAlgorithm.fitnessOverTime);
+        logger.log("Length of path",
+                geneticAlgorithm.getBestIndividual().calculateFitness(geneticAlgorithm.cities));
+        logger.log("Optimal path", geneticAlgorithm.getBestIndividual().printSequence());
 
         timer.renderTime();
 
-        logger.logWithoutMessage("Time elapsed", timer.getDurationInSeconds());
+        logger.logWithoutMessage("Time elapsed", timer.getDurationInNanos());
+
+        logger.logTabular(
+                geneticAlgorithm.generationCount,
+                geneticAlgorithm.getBestIndividual().calculateFitness(geneticAlgorithm.cities),
+                geneticAlgorithm.getBestIndividual().printSequence(),
+                timer.getDurationInNanos()
+        );
     }
 
 }

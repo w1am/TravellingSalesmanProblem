@@ -8,7 +8,6 @@ import java.util.Random;
 
 public class GeneticAlgorithm {
     private final Random random;
-    private final List<Double> cumulativeProportions;
     private double previousFitness;
     public List<Individual> population;
     public List<Double> fitnessOverTime;
@@ -22,7 +21,6 @@ public class GeneticAlgorithm {
 
     public GeneticAlgorithm() {
         this.previousFitness = Double.MAX_VALUE;
-        this.cumulativeProportions = new ArrayList<>();
         this.fitnessOverTime = new ArrayList<>();
         this.population = new ArrayList<>();
         this.cities = new ArrayList<>();
@@ -74,8 +72,6 @@ public class GeneticAlgorithm {
     public void doGeneration() {
         this.generationCount++;
 
-        updateCumulativeProportions();
-
         List<Individual> offspring = new ArrayList<>();
 
         for (int i = 0; i < Configuration.POPULATION_COUNT; i++) {
@@ -100,14 +96,12 @@ public class GeneticAlgorithm {
         // Add all the offspring to our existing population
         this.population.addAll(offspring);
 
-        // Order the population individual by their fitness values
-        population.sort((a, b) -> {
-            try {
-                return Double.compare(a.calculateFitness(this.cities), b.calculateFitness(this.cities));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return 0;
+        // Order population by fitness value (ascending)
+        this.population.sort((individual1, individual2) -> {
+            double fitness1 = individual1.calculateFitness(this.cities);
+            double fitness2 = individual2.calculateFitness(this.cities);
+
+            return Double.compare(fitness1, fitness2);
         });
 
         Individual bestIndividual = population.get(0);
@@ -206,7 +200,8 @@ public class GeneticAlgorithm {
         // Generate an integer between 1 and town size - 1
         int crossoverPosition = random.nextInt(this.citiesCount - 1) + 1;
 
-        List<Integer> offspringSequence = new ArrayList<>(individualA.getSequence().subList(0, crossoverPosition));
+        List<Integer> offspringSequence = new ArrayList<>(individualA.getSequence().subList(0,
+                crossoverPosition));
 
         // Add all the elements from individualB that are not in offspringSequence
         for (int i = 0; i < individualB.getSequence().size(); i++) {
@@ -219,19 +214,7 @@ public class GeneticAlgorithm {
     }
 
     private Individual getParent() {
-        Individual selectedIndividual;
-
-        if (random.nextDouble() > 0.5) {
-            // Tournament
-            selectedIndividual = tournamentSelection();
-        } else {
-            // Biased random
-            selectedIndividual = biasedRandomSelection();
-        }
-
-        selectedIndividual.getSequence().add(selectedIndividual.getSequence().get(0));
-
-        return selectedIndividual;
+        return tournamentSelection();
     }
 
     private Individual tournamentSelection() {
@@ -249,56 +232,8 @@ public class GeneticAlgorithm {
         }
     }
 
-    private Individual biasedRandomSelection() {
-        double selectedValue = random.nextDouble();
-
-        for (int i = 0; i < cumulativeProportions.size(); i++) {
-            double value = cumulativeProportions.get(i);
-
-            if (value >= selectedValue) {
-                return population.get(i);
-            }
-        }
-
-        return population.get(Configuration.POPULATION_COUNT - 1);
-    }
-
     public Individual getBestIndividual() {
         // Go back to starting town
         return getParent();
-    }
-
-    public void updateCumulativeProportions() {
-        // Sum of all current individual fitness
-        double sum = 0.0;
-
-        for (Individual i : population) {
-            sum = i.calculateFitness(this.cities);
-        }
-
-        List<Double> proportions = new ArrayList<>();
-
-        for (Individual i : population) {
-            proportions.add(sum / i.calculateFitness(this.cities));
-        }
-
-        double proportionSum = 0.0;
-
-        for (Double i : proportions) {
-            proportionSum += i;
-        }
-
-        List<Double> normalizedProportions = new ArrayList<>();
-
-        for (Double i : proportions) {
-            normalizedProportions.add(i / proportionSum);
-        }
-
-        double cumulativeTotal = 0.0;
-
-        for (Double i : normalizedProportions) {
-            cumulativeTotal += i;
-            cumulativeProportions.add(cumulativeTotal);
-        }
     }
 }
