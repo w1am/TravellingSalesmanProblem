@@ -1,10 +1,7 @@
 package geneticAlgorithm;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class GeneticAlgorithm {
     private final Random random;
@@ -12,7 +9,7 @@ public class GeneticAlgorithm {
     public List<Individual> population;
     public int generationCount = 0;
     public int noImprovementCount = 0;
-    private int citiesCount = 0;
+    private int cityCount = 0;
     public final List<City> cities;
 
     public Boolean hasConverged = generationCount > Configuration.MAX_GENERATIONS ||
@@ -39,25 +36,25 @@ public class GeneticAlgorithm {
             int yCoordinate = Integer.parseInt(tokens[2]);
             City city = new City(xCoordinate, yCoordinate);
             this.cities.add(city);
-            this.citiesCount++;
+            this.cityCount++;
             line = reader.readLine();
         }
 
         reader.close();
 
         for (int populationIndex = 0; populationIndex < Configuration.POPULATION_COUNT; populationIndex++) {
-            this.population.add(generateIndividual());
+            this.population.add(randomIndividual());
         }
     }
 
     /**
      * Generate an individual with a random sequence of cities
      */
-    private Individual generateIndividual() {
+    private Individual randomIndividual() {
         List<Integer> sequence = new ArrayList<>();
 
         /* Add the cities to the sequence */
-        for (int cityNumber = 0; cityNumber < this.citiesCount; cityNumber++) {
+        for (int cityNumber = 0; cityNumber < this.cityCount; cityNumber++) {
             sequence.add(cityNumber);
         }
 
@@ -67,7 +64,10 @@ public class GeneticAlgorithm {
         return new Individual(sequence);
     }
 
-    public void doGeneration() {
+    /**
+     * Create a generation
+     */
+    public void createGeneration() {
         this.generationCount++;
 
         List<Individual> offspring = new ArrayList<>();
@@ -84,8 +84,9 @@ public class GeneticAlgorithm {
             // Perform crossover
             Pair<Individual, Individual> offsprings = getOffSpring(mother, father);
 
-            // Mutate
-            Pair<Individual, Individual> mutatedOffsprings = doMutate(offsprings.first(), offsprings.second());
+            // Mutation
+            Mutation mutation = new Mutation(this.cityCount);
+            Pair<Individual, Individual> mutatedOffsprings = mutation.mutate(offsprings.first(), offsprings.second());
 
             offspring.add(mutatedOffsprings.first());
             offspring.add(mutatedOffsprings.second());
@@ -95,13 +96,9 @@ public class GeneticAlgorithm {
         this.population.addAll(offspring);
 
         // Order population by fitness value (ascending)
-        this.population.sort((individual1, individual2) -> {
-            double fitness1 = individual1.calculateFitness(this.cities);
-            double fitness2 = individual2.calculateFitness(this.cities);
+        this.population.sort(Comparator.comparingDouble(individual -> individual.calculateFitness(this.cities)));
 
-            return Double.compare(fitness1, fitness2);
-        });
-
+        // Grab the best individuals
         Individual bestIndividual = population.get(0);
 
         bestIndividual.getSequence().add(bestIndividual.getSequence().get(0));
@@ -116,75 +113,9 @@ public class GeneticAlgorithm {
         }
     }
 
-    private Pair<Individual, Individual> doMutate(Individual offspringA, Individual offspringB) {
-        Individual newOffspringA = new Individual(offspringA.getSequence());
-        Individual newOffspringB = new Individual(offspringB.getSequence());
-
-        if (random.nextDouble() < Configuration.MUTATION_CHANCE) {
-            newOffspringA = mutate(offspringA);
-        }
-
-        if (random.nextDouble()< Configuration.MUTATION_CHANCE) {
-            newOffspringB = mutate(offspringB);
-        }
-
-        return new Pair<>(newOffspringA, newOffspringB);
-    }
-
-    private Individual mutate(Individual offspring) {
-        if (random.nextDouble() > 0.5) {
-            // Do swap mutate
-            return swapMutate(offspring);
-        } else {
-            // Do rotate mutate
-            return rotateMutate(offspring);
-        }
-    }
-
-    private Individual swapMutate(Individual individual) {
-        List<Integer> sequence = individual.getSequence();
-
-        Pair<Integer, Integer> uniqueTowns = getUniqueTowns();
-
-        // Swap the towns in the sequence
-        int temp = sequence.get(uniqueTowns.first());
-        sequence.set(uniqueTowns.first(), sequence.get(uniqueTowns.second()));
-        sequence.set(uniqueTowns.second(), temp);
-
-        return new Individual(sequence);
-    }
-
-    private Individual rotateMutate(Individual individual) {
-        Pair<Integer, Integer> uniqueTowns = getUniqueTowns();
-
-        Integer townA = uniqueTowns.first();
-        Integer townB = uniqueTowns.second();
-
-        Integer firstIndex = townA < townB ? townA : townB;
-        Integer secondIndex = townA < townB ? townB : townA;
-
-        List<Integer> newSequence = individual.getSequence().subList(0, firstIndex);
-        List<Integer> middle = individual.getSequence().stream().skip(firstIndex).limit(secondIndex - firstIndex).toList();
-        List<Integer> tail = individual.getSequence().stream().skip(secondIndex).toList();
-
-        newSequence.addAll(middle);
-        newSequence.addAll(tail);
-
-        return new Individual(newSequence);
-    }
-
-    private Pair<Integer, Integer> getUniqueTowns() {
-        // Generate two unique towns
-        int townA = random.nextInt(this.citiesCount);
-        int townB = random.nextInt(this.citiesCount);
-
-        while (townB == townA) {
-            townB = random.nextInt(this.citiesCount);
-        }
-
-        return new Pair<>(townA, townB);
-    }
-
+    /**
+     * Get offsprings from the parents
+     */
     private Pair<Individual, Individual> getOffSpring(Individual individualA, Individual individualB) {
         Individual offspringA = doCrossover(individualA, individualB);
         Individual offspringB = doCrossover(individualB, individualA);
@@ -192,9 +123,12 @@ public class GeneticAlgorithm {
         return new Pair<>(offspringA, offspringB);
     }
 
+    /**
+     * Perform crossover
+     */
     private Individual doCrossover(Individual individualA, Individual individualB) {
         // Generate an integer between 1 and town size - 1
-        int crossoverPosition = random.nextInt(this.citiesCount - 1) + 1;
+        int crossoverPosition = random.nextInt(this.cityCount - 1) + 1;
 
         List<Integer> offspringSequence = new ArrayList<>(individualA.getSequence().subList(0,
                 crossoverPosition));
