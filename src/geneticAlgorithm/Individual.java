@@ -31,21 +31,11 @@ public class Individual {
     public float getTotalDistance() {
         float totalDistance = 0.0f;
 
-        for (int i = 1; i < sequence.size(); i++) {
-            City fromTown = this.cities.get(sequence.get(i - 1));
-            City toTown = this.cities.get(sequence.get(i));
-
-            float x = toTown.getXCoordinate() - fromTown.getXCoordinate();
-            float y = toTown.getYCoordinate() - fromTown.getYCoordinate();
-
-            double d = (float) Math.sqrt(x * x + y * y);
-
-            totalDistance += d;
+        for (int i = 0; i < cities.size(); i++) {
+            City city1 = cities.get(sequence.get(i));
+            City city2 = cities.get(sequence.get((i + 1) % cities.size()));
+            totalDistance += city1.distanceTo(city2);
         }
-
-        totalDistance += this.cities
-                .get(this.sequence.get(this.sequence.size() - 1))
-                .distanceTo(this.cities.get(this.sequence.get(0)));
 
         return totalDistance;
     }

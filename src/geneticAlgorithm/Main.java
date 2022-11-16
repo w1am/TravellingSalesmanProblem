@@ -18,7 +18,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 //        String fileName = readPath();
-        String fileName = "file1.txt";
+        String fileName = "file3.txt";
 
         Logger logger = new Logger(
                 "/logging/",
