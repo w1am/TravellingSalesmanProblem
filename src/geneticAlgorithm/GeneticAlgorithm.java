@@ -10,7 +10,6 @@ public class GeneticAlgorithm {
     private final Random random;
     private double previousFitness;
     public List<Individual> population;
-    public List<Double> fitnessOverTime;
     public int generationCount = 0;
     public int noImprovementCount = 0;
     private int citiesCount = 0;
@@ -21,7 +20,6 @@ public class GeneticAlgorithm {
 
     public GeneticAlgorithm() {
         this.previousFitness = Double.MAX_VALUE;
-        this.fitnessOverTime = new ArrayList<>();
         this.population = new ArrayList<>();
         this.cities = new ArrayList<>();
         this.random = new Random();
@@ -116,8 +114,6 @@ public class GeneticAlgorithm {
             previousFitness = bestFitness;
             noImprovementCount = 0;
         }
-
-        fitnessOverTime.add(bestFitness);
     }
 
     private Pair<Individual, Individual> doMutate(Individual offspringA, Individual offspringB) {

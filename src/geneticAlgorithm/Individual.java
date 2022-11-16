@@ -3,12 +3,7 @@ package geneticAlgorithm;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Individual {
-    private final List<Integer> sequence;
-
-    public Individual(List<Integer> sequence) {
-        this.sequence = sequence;
-    }
+public record Individual(List<Integer> sequence) {
 
     public List<Integer> getSequence() {
         return sequence;

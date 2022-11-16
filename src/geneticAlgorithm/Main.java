@@ -18,48 +18,50 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 //        String fileName = readPath();
-        String fileName = "file3.txt";
 
-        Logger logger = new Logger("/logging/", fileName, 1.0f, "Genetic Algorithm using simple distance calculation");
+        for (int i = 4; i <= 4; i++) {
+            String fileName = String.format("file%d.txt", i);
 
-        String pathToFile = System.getProperty("user.dir") + "/resources/" + fileName;
+            Logger logger = new Logger("/logging/", fileName, 1.0f, "Genetic Algorithm using simple distance calculation");
 
-        Timer timer = new Timer();
+            String pathToFile = System.getProperty("user.dir") + "/resources/" + fileName;
 
-        timer.start();
+            Timer timer = new Timer();
 
-        GeneticAlgorithm geneticAlgorithm = new GeneticAlgorithm();
+            timer.start();
 
-        geneticAlgorithm.spawnIndividuals(pathToFile);
+            GeneticAlgorithm geneticAlgorithm = new GeneticAlgorithm();
 
-        geneticAlgorithm.doGeneration();
+            geneticAlgorithm.spawnIndividuals(pathToFile);
 
-        do {
-            if (geneticAlgorithm.generationCount < Configuration.MAX_GENERATIONS && !geneticAlgorithm.hasConverged) {
-                geneticAlgorithm.doGeneration();
-            }
-        } while (
-            geneticAlgorithm.generationCount < Configuration.MAX_GENERATIONS &&
-            geneticAlgorithm.noImprovementCount != Configuration.MAX_NO_IMPROVEMENT_COUNT
-        );
+            geneticAlgorithm.doGeneration();
 
-        timer.stop();
+            do {
+                if (geneticAlgorithm.generationCount < Configuration.MAX_GENERATIONS && !geneticAlgorithm.hasConverged) {
+                    geneticAlgorithm.doGeneration();
+                }
+            } while (
+                    geneticAlgorithm.generationCount < Configuration.MAX_GENERATIONS &&
+                            geneticAlgorithm.noImprovementCount != Configuration.MAX_NO_IMPROVEMENT_COUNT
+            );
 
-        logger.log("Generation count", geneticAlgorithm.generationCount);
-        logger.log("Length of path",
-                geneticAlgorithm.getBestIndividual().calculateFitness(geneticAlgorithm.cities));
-        logger.log("Optimal path", geneticAlgorithm.getBestIndividual().printSequence());
+            timer.stop();
 
-        timer.renderTime();
+            logger.log("Generation count", geneticAlgorithm.generationCount);
+            logger.log("Length of path",
+                    geneticAlgorithm.getBestIndividual().calculateFitness(geneticAlgorithm.cities));
+            logger.log("Optimal path", geneticAlgorithm.getBestIndividual().printSequence());
 
-        logger.logWithoutMessage("Time elapsed", timer.getDurationInNanos());
+            logger.logWithoutMessage("Time elapsed", timer.getDurationInNanos());
 
-        logger.logTabular(
-                geneticAlgorithm.generationCount,
-                geneticAlgorithm.getBestIndividual().calculateFitness(geneticAlgorithm.cities),
-                geneticAlgorithm.getBestIndividual().printSequence(),
-                timer.getDurationInNanos()
-        );
+            logger.logTabular(
+                    fileName,
+                    geneticAlgorithm.generationCount,
+                    geneticAlgorithm.getBestIndividual().calculateFitness(geneticAlgorithm.cities),
+                    geneticAlgorithm.getBestIndividual().printSequence(),
+                    timer.getDurationInNanos()
+            );
+        }
     }
 
 }

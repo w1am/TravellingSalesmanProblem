@@ -9,6 +9,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Custom logger class to log outputs to a file.
@@ -47,8 +49,13 @@ public class Logger {
         Files.writeString(Paths.get(this.outputFilePath), logMessage, StandardOpenOption.APPEND);
     }
 
-    public void logTabular(Object generationCount, Object lengthOfPath, Object optimalPath, Object timeElapsed) throws IOException {
-        String logMessage = generationCount + " & "  + lengthOfPath + " & " + optimalPath + " & " + "\\num[group" +
+    public void logTabular(Object fileName, Object generationCount, Object lengthOfPath, List<Integer> optimalPath,
+                           Object timeElapsed) throws IOException {
+        String logMessage =
+                fileName + " & " + generationCount + " & "  + lengthOfPath + " & " + optimalPath.stream().map(Object::toString).collect(Collectors.joining(", ")) +
+                " & " +
+                "\\num" +
+                "[group" +
                 "-separator={,}]{" + timeElapsed + "}\n";
         Files.writeString(Paths.get(this.outputFilePath), logMessage, StandardOpenOption.APPEND);
     }
